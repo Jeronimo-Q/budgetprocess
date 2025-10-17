@@ -9,33 +9,71 @@ import org.springframework.context.annotation.PropertySource;
 @ConfigurationProperties(prefix = "budget.procesar")
 @PropertySource("classpath:application.properties")
 public class BudgetQueueConfig {
-
     private String exchangeName;
-    private String routingKeyName;
-    private String queueName;
 
-    public String getExchangeName() {
+    private String routingKeyExpenseCreate;
+    private String routingKeyExpenseUpdate;
+    private String routingKeyExpenseDelete;
+
+    private String queueExpenseCreate;
+    private String queueExpenseUpdate;
+    private String queueExpenseDelete;
+
+    public String getExchangeName()
+    {
         return exchangeName;
-    }
-
-    public String getRoutingKeyName() {
-        return routingKeyName;
-    }
-
-    public void setRoutingKeyName(String routingKeyName) {
-        this.routingKeyName = routingKeyName;
-    }
-
-    public String getQueueName() {
-        return queueName;
     }
 
     public void setExchangeName(String exchangeName) {
         this.exchangeName = exchangeName;
     }
 
-
-    public void setQueueName(String queueName) {
-        this.queueName = queueName;
+    public String getRoutingKeyExpenseCreate() {
+        return routingKeyExpenseCreate;
     }
+
+    public void setRoutingKeyExpenseCreate(String routingKeyExpenseCreate) {
+        this.routingKeyExpenseCreate = routingKeyExpenseCreate;
+    }
+
+    public String getRoutingKeyExpenseUpdate() {
+        return routingKeyExpenseUpdate;
+    }
+
+    public void setRoutingKeyExpenseUpdate(String routingKeyExpenseUpdate) {
+        this.routingKeyExpenseUpdate = routingKeyExpenseUpdate;
+    }
+
+    public String getRoutingKeyExpenseDelete() {
+        return routingKeyExpenseDelete;
+    }
+
+    public void setRoutingKeyExpenseDelete(String routingKeyExpenseDelete) {
+        this.routingKeyExpenseDelete = routingKeyExpenseDelete;
+    }
+
+    public String getQueueExpenseCreate() {
+        return queueExpenseCreate;
+    }
+
+    public void setQueueExpenseCreate(String queueExpenseCreate) {
+        this.queueExpenseCreate = queueExpenseCreate;
+    }
+
+    public String getQueueExpenseUpdate() {
+        return queueExpenseUpdate;
+    }
+
+    public void setQueueExpenseUpdate(String queueExpenseUpdate) {
+        this.queueExpenseUpdate = queueExpenseUpdate;
+    }
+
+    public String getQueueExpenseDelete() {
+        return queueExpenseDelete;
+    }
+
+    public void setQueueExpenseDelete(String queueExpenseDelete) {
+        this.queueExpenseDelete = queueExpenseDelete;
+    }
+
 }
