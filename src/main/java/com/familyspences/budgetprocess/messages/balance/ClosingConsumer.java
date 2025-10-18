@@ -1,6 +1,6 @@
 package com.familyspences.budgetprocess.messages.balance;
 
-import com.familyspences.budgetprocess.confi.messages.balance.BudgetQueueConfig;
+import com.familyspences.budgetprocess.confi.messages.balance.BalanceQueueConfig;
 import com.familyspences.budgetprocess.domian.balance.MonthlyClosing;
 import com.familyspences.budgetprocess.service.balance.MonthlyClosingService;
 import org.slf4j.Logger;
@@ -18,7 +18,7 @@ public class ClosingConsumer {
         this.closingService = closingService;
     }
 
-    @RabbitListener(queues = BudgetQueueConfig.QUEUE_NAME)
+    @RabbitListener(queues = BalanceQueueConfig.QUEUE_NAME)
     public void handleMonthlyClosingRequest(MonthlyClosing closingData) {
         logger.info("Received message: {}", closingData);
         try {

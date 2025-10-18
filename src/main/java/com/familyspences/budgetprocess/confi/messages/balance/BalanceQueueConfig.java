@@ -10,7 +10,7 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class BudgetQueueConfig {
+public class BalanceQueueConfig {
     public static final String EXCHANGE_NAME = "x.closing.events";
     public static final String QUEUE_NAME = "q.month.close.process";
     public static final String ROUTING_KEY = "event.month.close.request";
