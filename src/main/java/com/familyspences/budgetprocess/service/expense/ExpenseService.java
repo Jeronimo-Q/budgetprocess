@@ -1,7 +1,7 @@
 package com.familyspences.budgetprocess.service.expense;
 
 import com.familyspences.budgetprocess.domian.expense.Expense;
-import com.familyspences.budgetprocess.messages.ReceiverMessagesBroker;
+import com.familyspences.budgetprocess.messages.expense.ReceiverExpenseMessagesBroker;
 import com.familyspences.budgetprocess.repository.expense.ExpenseRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
-    private static final Logger log = LoggerFactory.getLogger(ReceiverMessagesBroker.class);
+    private static final Logger log = LoggerFactory.getLogger(ReceiverExpenseMessagesBroker.class);
 
     public ExpenseService(ExpenseRepository expenseRepository) {
         this.expenseRepository = expenseRepository;

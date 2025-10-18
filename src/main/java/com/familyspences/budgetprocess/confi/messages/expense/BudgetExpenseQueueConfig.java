@@ -1,4 +1,4 @@
-package com.familyspences.budgetprocess.confi.messages;
+package com.familyspences.budgetprocess.confi.messages.expense;
 
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -8,7 +8,7 @@ import org.springframework.context.annotation.PropertySource;
 @Configuration
 @ConfigurationProperties(prefix = "budget.procesar")
 @PropertySource("classpath:application.properties")
-public class BudgetQueueConfig {
+public class BudgetExpenseQueueConfig {
     private String exchangeName;
 
     private String routingKeyExpenseCreate;

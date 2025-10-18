@@ -1,4 +1,4 @@
-package com.familyspences.budgetprocess.messages;
+package com.familyspences.budgetprocess.messages.expense;
 
 import com.familyspences.budgetprocess.domian.expense.Expense;
 import com.familyspences.budgetprocess.service.expense.ExpenseService;
@@ -11,13 +11,13 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
-public class ReceiverMessagesBroker {
+public class ReceiverExpenseMessagesBroker {
     private final MapperJsonObject mapper;
     private final ExpenseService expenseService;
-    private static final Logger log = LoggerFactory.getLogger(ReceiverMessagesBroker.class);
+    private static final Logger log = LoggerFactory.getLogger(ReceiverExpenseMessagesBroker.class);
     private int delay =4000;
 
-    public ReceiverMessagesBroker(MapperJsonObject mapper, ExpenseService expenseService) {
+    public ReceiverExpenseMessagesBroker(MapperJsonObject mapper, ExpenseService expenseService) {
         this.mapper = mapper;
         this.expenseService = expenseService;
     }
