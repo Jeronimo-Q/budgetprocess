@@ -1,7 +1,10 @@
 package com.familyspences.budgetprocess.messages.ranking;
 
+import com.familyspences.budgetprocess.confi.messages.ranking.BudgetRankingQueueConfig;
 import com.familyspences.budgetprocess.domian.expense.Expense;
+import com.familyspences.budgetprocess.domian.ranking.Ranking;
 import com.familyspences.budgetprocess.service.expense.ExpenseService;
+import com.familyspences.budgetprocess.service.ranking.RankingService;
 import com.familyspences.budgetprocess.utils.gson.MapperJsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,45 +15,32 @@ import java.util.Optional;
 
 @Component
 public class ReceiverRankingMessagesBroker {
+
     private final MapperJsonObject mapper;
-    private final ExpenseService expenseService;
+    private final RankingService rankingService;
     private static final Logger log = LoggerFactory.getLogger(ReceiverRankingMessagesBroker.class);
-    private int delay =4000;
 
-    public ReceiverRankingMessagesBroker(MapperJsonObject mapper, ExpenseService expenseService) {
+
+    public ReceiverRankingMessagesBroker(MapperJsonObject mapper, RankingService rankingService) {
         this.mapper = mapper;
-        this.expenseService = expenseService;
+        this.rankingService = rankingService;
     }
 
 
-    @RabbitListener(queues = "${budget.procesar.queue-expense-create}")
-    public void createExpense(String messageJson) {
-        try{
-            Thread.sleep(delay);
-        }catch (InterruptedException e){
-            Thread.currentThread().interrupt();
-            log.error("El Hilo fue interrumpido mientras se esperaba: ",e);
-        }
+    @RabbitListener(queues = BudgetRankingQueueConfig.RANKING_QUEUE_NAME)
+    public void receiveRanking(String messageJson) {
+        log.info("Mensaje de Ranking recibido: {}", messageJson);
         try {
-            Optional<Expense> expense = mapper.execute(messageJson, Expense.class);
-            if (expense.isPresent()) {
-                expenseService.save(expense.get());
+            Optional<Ranking> ranking = mapper.execute(messageJson, Ranking.class);
+
+            if (ranking.isPresent()) {
+                rankingService.save(ranking.get());
             } else {
-                log.error("Expense not found");
+                log.error("No se pudo deserializar el mensaje de Ranking.");
             }
-        }catch (Exception e){
-            log.error("Error creating expense: ",e);
+        } catch (Exception e) {
+            log.error("Error al procesar mensaje de Ranking: ", e);
         }
-    }
-
-    @RabbitListener(queues = "${budget.procesar.queue-expense-update}")
-    public void updateExpense(String messageJson) {
-
-    }
-
-    @RabbitListener(queues = "${budget.procesar.queue-expense-delete}")
-    public void deleteExpense(String messageJson) {
-
     }
 
 
