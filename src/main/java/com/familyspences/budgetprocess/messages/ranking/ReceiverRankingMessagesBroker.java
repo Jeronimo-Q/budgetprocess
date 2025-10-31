@@ -16,32 +16,29 @@ import java.util.Optional;
 @Component
 public class ReceiverRankingMessagesBroker {
 
-    private final MapperJsonObject mapper;
+
     private final RankingService rankingService;
     private static final Logger log = LoggerFactory.getLogger(ReceiverRankingMessagesBroker.class);
 
 
-    public ReceiverRankingMessagesBroker(MapperJsonObject mapper, RankingService rankingService) {
-        this.mapper = mapper;
+    public ReceiverRankingMessagesBroker( RankingService rankingService) {
         this.rankingService = rankingService;
     }
 
 
     @RabbitListener(queues = BudgetRankingQueueConfig.RANKING_QUEUE_NAME)
-    public void receiveRanking(String messageJson) {
-        log.info("Mensaje de Ranking recibido: {}", messageJson);
+    public void receiveRanking(Ranking ranking) {
+        log.info("Mensaje de Ranking recibido para usuario: {} en período: {}", ranking.getUserId(), ranking.getPeriod());
         try {
-            Optional<Ranking> ranking = mapper.execute(messageJson, Ranking.class);
 
-            if (ranking.isPresent()) {
-                rankingService.save(ranking.get());
+            if (ranking != null) {
+                rankingService.save(ranking);
             } else {
-                log.error("No se pudo deserializar el mensaje de Ranking.");
+                log.error("Se recibió un mensaje de Ranking nulo o no se pudo deserializar.");
             }
         } catch (Exception e) {
             log.error("Error al procesar mensaje de Ranking: ", e);
         }
     }
-
 
 }

@@ -13,7 +13,8 @@ public class BudgetRankingQueueConfig {
 
     public static final String RANKING_EXCHANGE_NAME = "x.ranking.exchange";
     public static final String RANKING_QUEUE_NAME = "q.ranking.calculate";
-    public static final String RANKING_ROUTING_KEY = "ranking.calculate.request";
+
+    public static final String RANKING_ROUTING_KEY = "budget.ranking.create";
 
     @Bean
     public TopicExchange rankingExchange() {
