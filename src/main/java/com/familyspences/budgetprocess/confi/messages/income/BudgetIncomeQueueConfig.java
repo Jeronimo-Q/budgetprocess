@@ -3,86 +3,75 @@ package com.familyspences.budgetprocess.confi.messages.income;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 
 @Configuration
-@ConfigurationProperties(prefix = "budget.procesar")
-@PropertySource("classpath:application.properties")
 public class BudgetIncomeQueueConfig {
 
+    @Value("${budget.procesar.exchange-name:${budget.procesar.exchangeName}}")
     private String exchangeName;
-    private String routingKeyIncomeCreate;
-    private String routingKeyIncomeUpdate;
-    private String routingKeyIncomeDelete;
-    private String queueIncomeCreate;
-    private String queueIncomeUpdate;
-    private String queueIncomeDelete;
 
-    // Getters y Setters
-    public String getExchangeName() { return exchangeName; }
-    public void setExchangeName(String exchangeName) { this.exchangeName = exchangeName; }
+    @Value("${budget.procesar.routing-key-income-create:${budget.procesar.routingKeyIncomeCreate}}")
+    private String rkIncomeCreate;
 
-    public String getRoutingKeyIncomeCreate() { return routingKeyIncomeCreate; }
-    public void setRoutingKeyIncomeCreate(String routingKeyIncomeCreate) { this.routingKeyIncomeCreate = routingKeyIncomeCreate; }
+    @Value("${budget.procesar.routing-key-income-update:${budget.procesar.routingKeyIncomeUpdate}}")
+    private String rkIncomeUpdate;
 
-    public String getRoutingKeyIncomeUpdate() { return routingKeyIncomeUpdate; }
-    public void setRoutingKeyIncomeUpdate(String routingKeyIncomeUpdate) { this.routingKeyIncomeUpdate = routingKeyIncomeUpdate; }
+    @Value("${budget.procesar.routing-key-income-delete:${budget.procesar.routingKeyIncomeDelete}}")
+    private String rkIncomeDelete;
 
-    public String getRoutingKeyIncomeDelete() { return routingKeyIncomeDelete; }
-    public void setRoutingKeyIncomeDelete(String routingKeyIncomeDelete) { this.routingKeyIncomeDelete = routingKeyIncomeDelete; }
+    @Value("${budget.procesar.queue-income-create:${budget.procesar.queueIncomeCreate}}")
+    private String qIncomeCreate;
 
-    public String getQueueIncomeCreate() { return queueIncomeCreate; }
-    public void setQueueIncomeCreate(String queueIncomeCreate) { this.queueIncomeCreate = queueIncomeCreate; }
+    @Value("${budget.procesar.queue-income-update:${budget.procesar.queueIncomeUpdate}}")
+    private String qIncomeUpdate;
 
-    public String getQueueIncomeUpdate() { return queueIncomeUpdate; }
-    public void setQueueIncomeUpdate(String queueIncomeUpdate) { this.queueIncomeUpdate = queueIncomeUpdate; }
+    @Value("${budget.procesar.queue-income-delete:${budget.procesar.queueIncomeDelete}}")
+    private String qIncomeDelete;
 
-    public String getQueueIncomeDelete() { return queueIncomeDelete; }
-    public void setQueueIncomeDelete(String queueIncomeDelete) { this.queueIncomeDelete = queueIncomeDelete; }
-
-    // --- Beans ---
-    @Bean
+    @Bean(name = "budgetExchangeIncome")
     public TopicExchange budgetExchangeIncome() {
-        return new TopicExchange(getExchangeName());
+        return new TopicExchange(exchangeName, true, false);
     }
 
-    @Bean
+    @Bean(name = "budgetIncomeCreateQueue")
     public Queue budgetIncomeCreateQueue() {
-        return new Queue(getQueueIncomeCreate(), true);
+        return QueueBuilder.durable(qIncomeCreate).build();
     }
 
     @Bean
-    public Binding bindingIncomeCreate(Queue budgetIncomeCreateQueue, TopicExchange budgetExchangeIncome) {
-        return BindingBuilder.bind(budgetIncomeCreateQueue)
-                .to(budgetExchangeIncome)
-                .with(getRoutingKeyIncomeCreate());
+    public Binding bindingIncomeCreate(
+            @Qualifier("budgetIncomeCreateQueue") Queue q,
+            @Qualifier("budgetExchangeIncome") TopicExchange ex) {
+        return BindingBuilder.bind(q).to(ex).with(rkIncomeCreate);
     }
 
-    @Bean
+    @Bean(name = "budgetIncomeUpdateQueue")
     public Queue budgetIncomeUpdateQueue() {
-        return new Queue(getQueueIncomeUpdate(), true);
+        return QueueBuilder.durable(qIncomeUpdate).build();
     }
 
     @Bean
-    public Binding bindingIncomeUpdate(Queue budgetIncomeUpdateQueue, TopicExchange budgetExchangeIncome) {
-        return BindingBuilder.bind(budgetIncomeUpdateQueue)
-                .to(budgetExchangeIncome)
-                .with(getRoutingKeyIncomeUpdate());
+    public Binding bindingIncomeUpdate(
+            @Qualifier("budgetIncomeUpdateQueue") Queue q,
+            @Qualifier("budgetExchangeIncome") TopicExchange ex) {
+        return BindingBuilder.bind(q).to(ex).with(rkIncomeUpdate);
     }
 
-    @Bean
+    @Bean(name = "budgetIncomeDeleteQueue")
     public Queue budgetIncomeDeleteQueue() {
-        return new Queue(getQueueIncomeDelete(), true);
+        return QueueBuilder.durable(qIncomeDelete).build();
     }
 
     @Bean
-    public Binding bindingIncomeDelete(Queue budgetIncomeDeleteQueue, TopicExchange budgetExchangeIncome) {
-        return BindingBuilder.bind(budgetIncomeDeleteQueue)
-                .to(budgetExchangeIncome)
-                .with(getRoutingKeyIncomeDelete());
+    public Binding bindingIncomeDelete(
+            @Qualifier("budgetIncomeDeleteQueue") Queue q,
+            @Qualifier("budgetExchangeIncome") TopicExchange ex) {
+        return BindingBuilder.bind(q).to(ex).with(rkIncomeDelete);
     }
 }
