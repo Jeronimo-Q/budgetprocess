@@ -1,81 +1,82 @@
-package com.familyspences.budgetprocess.messages.income;
+package com.familyspences.budgetprocess.messages.Income;
 
+import com.familyspences.budgetprocess.confi.messages.income.BudgetIncomeQueueConfig;
 import com.familyspences.budgetprocess.domian.income.Income;
+import com.familyspences.budgetprocess.domian.users.RegisterUser;
 import com.familyspences.budgetprocess.service.income.IncomeService;
-import com.familyspences.budgetprocess.utils.gson.MapperJsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class ReceiverIncomeMessagesBroker {
 
     private static final Logger log = LoggerFactory.getLogger(ReceiverIncomeMessagesBroker.class);
+    private final IncomeService incomeService;
 
-    private final MapperJsonObject mapper;
-    private final IncomeService service;
-
-    public ReceiverIncomeMessagesBroker(MapperJsonObject mapper, IncomeService service) {
-        this.mapper = mapper;
-        this.service = service;
+    public ReceiverIncomeMessagesBroker(IncomeService incomeService) {
+        this.incomeService = incomeService;
     }
 
-    @RabbitListener(queues = "${budget.procesar.queue-income-create}")
-    public void receiveCreate(String message) {
-        mapper.execute(message, Income.class).ifPresentOrElse(
-                income -> {
-                    try {
-                        service.createIncome(income);
-                        log.info("Income creado: {}", income);
-                    } catch (Exception e) {
-                        log.error("Error creando Income: {}", income, e);
-                        throw new AmqpRejectAndDontRequeueException("Error creando Income", e);
-                    }
-                },
-                () -> {
-                    log.error("JSON inválido (CREATE): {}", message);
-                    throw new AmqpRejectAndDontRequeueException("JSON inválido (CREATE)");
-                }
-        );
+    @RabbitListener(queues = BudgetIncomeQueueConfig.QUEUE_INCOME_CREATE)
+    public void handleIncomeCreate(Map<String, Object> data) {
+        log.info("Received Income CREATE event: {}", data);
+        try {
+            Income income = mapToIncome(data);
+            incomeService.saveFromProducer(income);
+            log.info("Income saved successfully: {}", income.getId());
+        } catch (Exception e) {
+            log.error("Error processing Income CREATE event: {}", e.getMessage(), e);
+        }
     }
 
-    @RabbitListener(queues = "${budget.procesar.queue-income-update}")
-    public void receiveUpdate(String message) {
-        mapper.execute(message, Income.class).ifPresentOrElse(
-                income -> {
-                    try {
-                        service.updateIncome(income);
-                        log.info("Income actualizado: {}", income.getId());
-                    } catch (Exception e) {
-                        log.error("Error actualizando Income: {}", income, e);
-                        throw new AmqpRejectAndDontRequeueException("Error actualizando Income", e);
-                    }
-                },
-                () -> {
-                    log.error("JSON inválido (UPDATE): {}", message);
-                    throw new AmqpRejectAndDontRequeueException("JSON inválido (UPDATE)");
-                }
-        );
+    // OYENTE CLAVE: Maneja el evento de Actualización
+    @RabbitListener(queues = BudgetIncomeQueueConfig.QUEUE_INCOME_UPDATE)
+    public void handleIncomeUpdate(Map<String, Object> data) {
+        log.info("Received Income UPDATE event: {}", data);
+        try {
+            Income income = mapToIncome(data);
+            // Llama al servicio para actualizar el registro en la DB local
+            incomeService.updateFromProducer(income);
+            log.info("Income updated successfully: {}", income.getId());
+        } catch (Exception e) {
+            log.error("Error processing Income UPDATE event: {}", e.getMessage(), e);
+        }
     }
 
-    @RabbitListener(queues = "${budget.procesar.queue-income-delete}")
-    public void receiveDelete(String message) {
-        mapper.execute(message, Income.class).ifPresentOrElse(
-                income -> {
-                    try {
-                        service.deleteIncome(income.getId());
-                        log.warn("Income eliminado: {}", income.getId());
-                    } catch (Exception e) {
-                        log.error("Error eliminando Income: {}", income, e);
-                        throw new AmqpRejectAndDontRequeueException("Error eliminando Income", e);
-                    }
-                },
-                () -> {
-                    log.error("JSON inválido (DELETE): {}", message);
-                    throw new AmqpRejectAndDontRequeueException("JSON inválido (DELETE)");
-                }
-        );
+    @RabbitListener(queues = BudgetIncomeQueueConfig.QUEUE_INCOME_DELETE)
+    public void handleIncomeDelete(Map<String, String> data) {
+        log.info("Received Income DELETE event: {}", data);
+        incomeService.deleteFromProducer(data);
+    }
+
+    private Income mapToIncome(Map<String, Object> data) {
+        Income income = new Income();
+
+        income.setId(UUID.fromString((String) data.get("id")));
+        income.setTitle((String) data.get("title"));
+        income.setDescription((String) data.get("description"));
+        income.setPeriod((String) data.get("period"));
+
+        // Manejo robusto del campo 'total' (puede venir como Double, Integer, etc.)
+        Object totalValue = data.get("total");
+        if (totalValue instanceof Number) {
+            income.setTotal(((Number) totalValue).doubleValue());
+        } else if (totalValue instanceof String) {
+            income.setTotal(Double.parseDouble((String) totalValue));
+        } else {
+            income.setTotal(0.0);
+        }
+
+        income.setFamily(UUID.fromString((String) data.get("family")));
+
+        Map<String, String> respMap = (Map<String, String>) data.get("responsible");
+        income.setResponsible(new RegisterUser(UUID.fromString(respMap.get("id"))));
+
+        return income;
     }
 }

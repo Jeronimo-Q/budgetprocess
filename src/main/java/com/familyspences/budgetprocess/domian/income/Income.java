@@ -1,44 +1,62 @@
 package com.familyspences.budgetprocess.domian.income;
 
+import com.familyspences.budgetprocess.domian.users.RegisterUser;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+
 import java.util.UUID;
 
 @Entity
 @Table(name = "incomes")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Income {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(length = 255, nullable = false)
+    @NotBlank(message = "El título no puede estar vacío")
+    @Column(nullable = false)
     private String title;
 
-    @Column(length = 500)
+    @NotBlank(message = "La descripción no puede estar vacía")
+    @Size(max = 500, message = "La descripción no puede superar los 500 caracteres")
+    @Column(name = "description", nullable = false, length = 500)
     private String description;
 
-    @Column(length = 50)
+    @NotBlank(message = "El período es obligatorio")
+    @Pattern(
+            regexp = "^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|\\d{4}-\\d{2})$",
+            message = "El período debe ser un mes válido en español o formato YYYY-MM"
+    )
+    @Column(nullable = false, length = 50)
     private String period;
 
+    @NotNull(message = "El total no puede ser nulo")
+    @Positive(message = "El total debe ser mayor que 0")
     @Column(nullable = false)
     private Double total;
 
-    @Column(name = "responsible_id", nullable = false)
-    private UUID responsibleId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsible_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private RegisterUser responsible;
 
     @Column(name = "family_id", nullable = false)
-    private UUID familyId;
+    private UUID family;
 
     public Income() {}
 
-    public Income(UUID id, String title, String description, String period, Double total, UUID responsibleId, UUID familyId) {
-        this.id = id;
+    public Income(String title, String description, String period,
+                  Double total, RegisterUser responsible, UUID family) {
         this.title = title;
         this.description = description;
         this.period = period;
         this.total = total;
-        this.responsibleId = responsibleId;
-        this.familyId = familyId;
+        this.responsible = responsible;
+        this.family = family;
     }
 
     public UUID getId() { return id; }
@@ -56,22 +74,9 @@ public class Income {
     public Double getTotal() { return total; }
     public void setTotal(Double total) { this.total = total; }
 
-    public UUID getResponsibleId() { return responsibleId; }
-    public void setResponsibleId(UUID responsibleId) { this.responsibleId = responsibleId; }
+    public RegisterUser getResponsible() { return responsible; }
+    public void setResponsible(RegisterUser responsible) { this.responsible = responsible; }
 
-    public UUID getFamilyId() { return familyId; }
-    public void setFamilyId(UUID familyId) { this.familyId = familyId; }
-
-    @Override
-    public String toString() {
-        return "Income{" +
-                "id=" + id +
-                ", title='" + title + '\'' +
-                ", description='" + description + '\'' +
-                ", period='" + period + '\'' +
-                ", total=" + total +
-                ", responsibleId=" + responsibleId +
-                ", familyId=" + familyId +
-                '}';
-    }
+    public UUID getFamily() { return family; }
+    public void setFamily(UUID family) { this.family = family; }
 }

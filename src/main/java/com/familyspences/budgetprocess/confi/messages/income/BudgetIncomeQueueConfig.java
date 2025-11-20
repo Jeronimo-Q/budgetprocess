@@ -2,76 +2,65 @@ package com.familyspences.budgetprocess.confi.messages.income;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.QueueBuilder;
-import org.springframework.amqp.core.TopicExchange;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class BudgetIncomeQueueConfig {
 
-    @Value("${budget.procesar.exchange-name:${budget.procesar.exchangeName}}")
-    private String exchangeName;
+    public static final String EXCHANGE_NAME = "x.income.exchange";
 
-    @Value("${budget.procesar.routing-key-income-create:${budget.procesar.routingKeyIncomeCreate}}")
-    private String rkIncomeCreate;
+    public static final String QUEUE_INCOME_CREATE = "q.income.create";
+    public static final String QUEUE_INCOME_DELETE = "q.income.delete";
+    public static final String QUEUE_INCOME_UPDATE = "q.income.update";
 
-    @Value("${budget.procesar.routing-key-income-update:${budget.procesar.routingKeyIncomeUpdate}}")
-    private String rkIncomeUpdate;
+    public static final String ROUTING_KEY_CREATE = "income.create";
+    public static final String ROUTING_KEY_DELETE = "income.delete";
+    public static final String ROUTING_KEY_UPDATE = "income.update";
 
-    @Value("${budget.procesar.routing-key-income-delete:${budget.procesar.routingKeyIncomeDelete}}")
-    private String rkIncomeDelete;
-
-    @Value("${budget.procesar.queue-income-create:${budget.procesar.queueIncomeCreate}}")
-    private String qIncomeCreate;
-
-    @Value("${budget.procesar.queue-income-update:${budget.procesar.queueIncomeUpdate}}")
-    private String qIncomeUpdate;
-
-    @Value("${budget.procesar.queue-income-delete:${budget.procesar.queueIncomeDelete}}")
-    private String qIncomeDelete;
-
-    @Bean(name = "budgetExchangeIncome")
-    public TopicExchange budgetExchangeIncome() {
-        return new TopicExchange(exchangeName, true, false);
-    }
-
-    @Bean(name = "budgetIncomeCreateQueue")
-    public Queue budgetIncomeCreateQueue() {
-        return QueueBuilder.durable(qIncomeCreate).build();
+    @Bean
+    public DirectExchange incomeExchange() {
+        return new DirectExchange(EXCHANGE_NAME);
     }
 
     @Bean
-    public Binding bindingIncomeCreate(
-            @Qualifier("budgetIncomeCreateQueue") Queue q,
-            @Qualifier("budgetExchangeIncome") TopicExchange ex) {
-        return BindingBuilder.bind(q).to(ex).with(rkIncomeCreate);
-    }
-
-    @Bean(name = "budgetIncomeUpdateQueue")
-    public Queue budgetIncomeUpdateQueue() {
-        return QueueBuilder.durable(qIncomeUpdate).build();
+    public Queue incomeCreateQueue() {
+        return new Queue(QUEUE_INCOME_CREATE, true);
     }
 
     @Bean
-    public Binding bindingIncomeUpdate(
-            @Qualifier("budgetIncomeUpdateQueue") Queue q,
-            @Qualifier("budgetExchangeIncome") TopicExchange ex) {
-        return BindingBuilder.bind(q).to(ex).with(rkIncomeUpdate);
-    }
-
-    @Bean(name = "budgetIncomeDeleteQueue")
-    public Queue budgetIncomeDeleteQueue() {
-        return QueueBuilder.durable(qIncomeDelete).build();
+    public Queue incomeDeleteQueue() {
+        return new Queue(QUEUE_INCOME_DELETE, true);
     }
 
     @Bean
-    public Binding bindingIncomeDelete(
-            @Qualifier("budgetIncomeDeleteQueue") Queue q,
-            @Qualifier("budgetExchangeIncome") TopicExchange ex) {
-        return BindingBuilder.bind(q).to(ex).with(rkIncomeDelete);
+    public Queue incomeUpdateQueue() {
+        return new Queue(QUEUE_INCOME_UPDATE, true);
+    }
+
+    @Bean
+    public Binding bindIncomeCreate(Queue incomeCreateQueue, DirectExchange incomeExchange) {
+        return BindingBuilder
+                .bind(incomeCreateQueue)
+                .to(incomeExchange)
+                .with(ROUTING_KEY_CREATE);
+    }
+
+    @Bean
+    public Binding bindIncomeDelete(Queue incomeDeleteQueue, DirectExchange incomeExchange) {
+        return BindingBuilder
+                .bind(incomeDeleteQueue)
+                .to(incomeExchange)
+                .with(ROUTING_KEY_DELETE);
+    }
+
+    @Bean
+    public Binding bindIncomeUpdate(Queue incomeUpdateQueue, DirectExchange incomeExchange) {
+        return BindingBuilder
+                .bind(incomeUpdateQueue)
+                .to(incomeExchange)
+                .with(ROUTING_KEY_UPDATE);
     }
 }
