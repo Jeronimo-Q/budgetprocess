@@ -1,5 +1,6 @@
 package com.familyspences.budgetprocess.domian.expense;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -27,7 +28,6 @@ public class Expense {
     @Column(nullable = false, length = 50)
     private String period;
 
-    // CAMBIO: Ahora usa RegisterUser en lugar de FamilyMemberDomain
     @Column(nullable = false, length = 50)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private String responsible;
@@ -35,14 +35,15 @@ public class Expense {
     @Column(nullable = false, precision = 11, scale = 2)
     private BigDecimal value;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ExpenseCategory category;
+    private String category;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
@@ -50,36 +51,17 @@ public class Expense {
     @Column(nullable = false)
     private UUID familyId;
 
-    // Enum para categorías
-    public enum ExpenseCategory {
-        ALIMENTACION("Alimentación"),
-        TRANSPORTE("Transporte"),
-        SERVICIOS("Servicios Públicos"),
-        ENTRETENIMIENTO("Entretenimiento"),
-        SALUD("Salud y Medicina"),
-        EDUCACION("Educación"),
-        ROPA("Ropa y Calzado"),
-        HOGAR("Hogar y Mantenimiento"),
-        OTROS("Otros");
-
-        private final String displayName;
-
-        ExpenseCategory(String displayName) {
-            this.displayName = displayName;
-        }
-
-        public String getDisplayName() {
-            return displayName;
-        }
-    }
-
     // Constructor vacío (requerido por JPA)
     public Expense() {
     }
 
+    public Expense(UUID id) {
+        this.id = id;
+    }
+
     // Constructor completo para datos existentes
     public Expense(UUID id, String title, String description, String period,
-                   String responsible, BigDecimal value, ExpenseCategory category) {
+                   String responsible, BigDecimal value, String category) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -91,7 +73,7 @@ public class Expense {
 
     // Constructor para nuevos gastos (sin ID)
     public Expense(String title, String description, String period,
-                   String responsible, BigDecimal value, ExpenseCategory category, UUID familyId) {
+                   String responsible, BigDecimal value, String category, UUID familyId) {
         this.title = title;
         this.description = description;
         this.period = period;
@@ -105,7 +87,7 @@ public class Expense {
 
     // Constructor mínimo para gastos básicos
     public Expense(String title, String period, String responsible,
-                   BigDecimal value, ExpenseCategory category) {
+                   BigDecimal value, String category) {
         this.title = title;
         this.period = period;
         this.responsible = responsible;
@@ -162,11 +144,11 @@ public class Expense {
         this.value = value;
     }
 
-    public ExpenseCategory getCategory() {
+    public String getCategory() {
         return category;
     }
 
-    public void setCategory(ExpenseCategory category) {
+    public void setCategory(String category) {
         this.category = category;
     }
 
@@ -178,6 +160,7 @@ public class Expense {
         return updatedAt;
     }
 
+    // Métodos de utilidad
     public boolean isExpensive() {
         return value != null && value.compareTo(new BigDecimal("1000.00")) > 0;
     }
@@ -190,6 +173,7 @@ public class Expense {
         return period != null && period.equalsIgnoreCase(otherPeriod);
     }
 
+    // Método para actualizar timestamp manualmente si es necesario
     public void updateTimestamp() {
         this.updatedAt = LocalDateTime.now();
     }
@@ -202,6 +186,7 @@ public class Expense {
         this.familyId = familyId;
     }
 
+    // Validación personalizada para el período
     public boolean isValidPeriod() {
         if (period == null || period.isBlank()) {
             return false;
@@ -214,6 +199,7 @@ public class Expense {
             return month >= 1 && month <= 12;
         }
 
+        // Verificar nombres de meses en español
         String[] validMonths = {"enero", "febrero", "marzo", "abril", "mayo", "junio",
                 "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"};
 
@@ -239,5 +225,6 @@ public class Expense {
     public int hashCode() {
         return Objects.hash(id);
     }
+
 
 }
