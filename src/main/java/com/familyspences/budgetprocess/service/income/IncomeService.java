@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Map;
 import java.util.UUID;
 
@@ -14,9 +13,7 @@ import java.util.UUID;
 public class IncomeService {
 
     private static final Logger log = LoggerFactory.getLogger(IncomeService.class);
-
     private final IncomeRepository repository;
-
     public IncomeService(IncomeRepository repository) {
         this.repository = repository;
     }
@@ -27,7 +24,6 @@ public class IncomeService {
         repository.save(income);
     }
 
-    // MÉTODO CLAVE: Actualiza el ingreso en la DB del procesador (save funciona como update si el ID existe)
     @Transactional
     public void updateFromProducer(Income income) {
         log.info("Updating income from producer: {}", income);

@@ -33,14 +33,11 @@ public class ReceiverIncomeMessagesBroker {
             log.error("Error processing Income CREATE event: {}", e.getMessage(), e);
         }
     }
-
-    // OYENTE CLAVE: Maneja el evento de Actualización
     @RabbitListener(queues = BudgetIncomeQueueConfig.QUEUE_INCOME_UPDATE)
     public void handleIncomeUpdate(Map<String, Object> data) {
         log.info("Received Income UPDATE event: {}", data);
         try {
             Income income = mapToIncome(data);
-            // Llama al servicio para actualizar el registro en la DB local
             incomeService.updateFromProducer(income);
             log.info("Income updated successfully: {}", income.getId());
         } catch (Exception e) {
@@ -53,16 +50,12 @@ public class ReceiverIncomeMessagesBroker {
         log.info("Received Income DELETE event: {}", data);
         incomeService.deleteFromProducer(data);
     }
-
     private Income mapToIncome(Map<String, Object> data) {
         Income income = new Income();
-
         income.setId(UUID.fromString((String) data.get("id")));
         income.setTitle((String) data.get("title"));
         income.setDescription((String) data.get("description"));
         income.setPeriod((String) data.get("period"));
-
-        // Manejo robusto del campo 'total' (puede venir como Double, Integer, etc.)
         Object totalValue = data.get("total");
         if (totalValue instanceof Number) {
             income.setTotal(((Number) totalValue).doubleValue());
@@ -71,12 +64,9 @@ public class ReceiverIncomeMessagesBroker {
         } else {
             income.setTotal(0.0);
         }
-
         income.setFamily(UUID.fromString((String) data.get("family")));
-
         Map<String, String> respMap = (Map<String, String>) data.get("responsible");
         income.setResponsible(new RegisterUser(UUID.fromString(respMap.get("id"))));
-
         return income;
     }
 }
