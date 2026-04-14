@@ -8,14 +8,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Component
 public class ReceiverBudgetMessagesBroker {
+
     private final MapperJsonObject mapper;
     private final BudgetService budgetService;
     private static final Logger log = LoggerFactory.getLogger(ReceiverBudgetMessagesBroker.class);
-    private int delay = 4000;
+    private final int delay = 4000;
 
     public ReceiverBudgetMessagesBroker(MapperJsonObject mapper, BudgetService budgetService) {
         this.mapper = mapper;
@@ -24,76 +26,76 @@ public class ReceiverBudgetMessagesBroker {
 
     @RabbitListener(queues = "q.budget.create")
     public void createBudget(String messageJson) {
-        try {
-            Thread.sleep(delay);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("El Hilo fue interrumpido mientras se esperaba: ", e);
-        }
+        applyDelay();
         try {
             Optional<Budget> budget = mapper.execute(messageJson, Budget.class);
             if (budget.isPresent()) {
                 Budget b = budget.get();
-                Budget savedBudget = budgetService.saveOrUpdateBudget(
+                Budget saved = budgetService.createBudget(
                         b.getFamilyId(),
                         b.getResponsibleId(),
                         b.getBudgetAmount(),
                         b.getPeriod()
                 );
-                log.info("Budget created successfully: {}", savedBudget.getBudgetId());
+                log.info("Presupuesto creado exitosamente: {}", saved.getBudgetId());
             } else {
-                log.error("Budget not found in message");
+                log.error("No se pudo deserializar el presupuesto del mensaje");
             }
+        } catch (IllegalArgumentException e) {
+            log.error("Monto inválido al crear presupuesto: {}", e.getMessage());
         } catch (Exception e) {
-            log.error("Error creating budget: ", e);
+            log.error("Error al crear presupuesto: ", e);
         }
     }
 
     @RabbitListener(queues = "q.budget.update")
     public void updateBudget(String messageJson) {
-        try {
-            Thread.sleep(delay);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("El Hilo fue interrumpido mientras se esperaba: ", e);
-        }
+        applyDelay();
         try {
             Optional<Budget> budget = mapper.execute(messageJson, Budget.class);
             if (budget.isPresent()) {
                 Budget b = budget.get();
-                Budget updatedBudget = budgetService.saveOrUpdateBudget(
-                        b.getFamilyId(),
-                        b.getResponsibleId(),
-                        b.getBudgetAmount(),
-                        b.getPeriod()
+                Budget updated = budgetService.updateBudget(
+                        b.getBudgetId(),
+                        b.getBudgetAmount()
                 );
-                log.info("Budget updated successfully: {}", updatedBudget.getBudgetId());
+                log.info("Presupuesto actualizado exitosamente: {}", updated.getBudgetId());
             } else {
-                log.error("Budget not found in message");
+                log.error("No se pudo deserializar el presupuesto del mensaje");
             }
+        } catch (IllegalArgumentException e) {
+            log.error("Monto inválido al actualizar presupuesto: {}", e.getMessage());
+        } catch (NoSuchElementException e) {
+            log.error("Presupuesto no encontrado para actualizar: {}", e.getMessage());
         } catch (Exception e) {
-            log.error("Error updating budget: ", e);
+            log.error("Error al actualizar presupuesto: ", e);
         }
     }
 
     @RabbitListener(queues = "q.budget.delete")
     public void deleteBudget(String messageJson) {
-        try {
-            Thread.sleep(delay);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("El Hilo fue interrumpido mientras se esperaba: ", e);
-        }
+        applyDelay();
         try {
             Optional<Budget> budget = mapper.execute(messageJson, Budget.class);
             if (budget.isPresent()) {
                 budgetService.deleteBudget(budget.get().getBudgetId());
-                log.info("Budget deleted successfully: {}", budget.get().getBudgetId());
+                log.info("Presupuesto eliminado exitosamente: {}", budget.get().getBudgetId());
             } else {
-                log.error("Budget not found in message");
+                log.error("No se pudo deserializar el presupuesto del mensaje");
             }
+        } catch (NoSuchElementException e) {
+            log.error("No se puede eliminar: {}", e.getMessage());
         } catch (Exception e) {
-            log.error("Error deleting budget: ", e);
+            log.error("Error al eliminar presupuesto: ", e);
+        }
+    }
+
+    private void applyDelay() {
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Hilo interrumpido durante espera: ", e);
         }
     }
 }
