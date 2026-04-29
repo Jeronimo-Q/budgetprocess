@@ -64,7 +64,7 @@ public class BudgetService {
     public void deleteBudget(UUID budgetId) {
         if (!budgetRepository.existsById(budgetId)) {
             throw new NoSuchElementException(
-                    "No se puede eliminar: presupuesto con ID " + budgetId + " no existe.");
+                    "No se puede eliminar: presupuesto con ID" + budgetId + " no existe.");
         }
         log.warn("Eliminando presupuesto con ID {}", budgetId);
         budgetRepository.deleteById(budgetId);
